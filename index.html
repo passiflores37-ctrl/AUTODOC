@@ -651,7 +651,10 @@
                         </div>
                         <div class="form-group"><label>Nom de l'Assureur</label><input type="text" id="i-as"
                                 placeholder="Ex: AXA, Maif..."></div>
-                        <div class="form-group"><label>Échéance Contrôle Technique</label><input type="date" id="i-dc">
+                        
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                            <div class="form-group"><label>Dernier CT</label><input type="date" id="i-ldc"></div>
+                            <div class="form-group"><label>Prochain CT</label><input type="date" id="i-ndc"></div>
                         </div>
 
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
@@ -864,7 +867,7 @@
         const initialSample = [{
             id: 1, model: "BMW Série 1", plate: "DE-456-FG", year: "2021-06-15", km: 58000, kmDate: "2026-03-20",
             isInsured: true, insurer: "AXA Insurance",
-            ct: "2027-11-20",
+            lastCT: "2024-11-20", nextCT: "2026-11-20", 
             lastService: "2025-12-05", nextService: "2026-12-05",
             pneusDate: "2025-11-10", pneusObs: "Pneus été Michelin",
             hasGilet: true, hasTriangle: true, hasExtincteur: false,
@@ -916,7 +919,8 @@
             document.getElementById('i-kd').value = v.kmDate;
             document.getElementById('i-is').checked = v.isInsured;
             document.getElementById('i-as').value = v.insurer || '';
-            document.getElementById('i-dc').value = v.ct;
+            document.getElementById('i-ldc').value = v.lastCT || '';
+            document.getElementById('i-ndc').value = v.nextCT || '';
             document.getElementById('i-sl').value = v.lastService;
             document.getElementById('i-sn').value = v.nextService;
             document.getElementById('i-pd').value = v.pneusDate || '';
@@ -948,7 +952,8 @@
                 kmDate: document.getElementById('i-kd').value,
                 isInsured: document.getElementById('i-is').checked,
                 insurer: document.getElementById('i-as').value,
-                ct: document.getElementById('i-dc').value,
+                lastCT: document.getElementById('i-ldc').value,
+                nextCT: document.getElementById('i-ndc').value,
                 lastService: document.getElementById('i-sl').value,
                 nextService: document.getElementById('i-sn').value,
                 pneusDate: document.getElementById('i-pd').value,
@@ -994,7 +999,12 @@
 
         // Auto-calculate next CT date if missing
         function getCTDate(v) {
-            if (v.ct) return v.ct;
+            if (v.nextCT) return v.nextCT;
+            if (v.lastCT) {
+                const last = new Date(v.lastCT);
+                last.setFullYear(last.getFullYear() + 2);
+                return last.toISOString().split('T')[0];
+            }
             if (!v.year) return null;
             const regDate = new Date(v.year);
             const today = new Date();
@@ -1038,7 +1048,13 @@
                         <span style="font-size:0.85rem; font-weight:600;">Assurance (${v.insurer || 'N/A'})</span>
                         <span class="badge badge-${v.isInsured ? 'green' : 'red'}">${v.isInsured ? 'Assuré' : 'Non Assuré'}</span>
                     </div>
-                    ${renderDateItem('Contrôle Technique', getCTDate(v))}
+                    <div style="margin-bottom:12px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                            <span style="font-size:0.75rem; color:var(--muted)">Dernier CT :</span>
+                            <span style="font-size:0.75rem; font-weight:700;">${formatDate(v.lastCT)}</span>
+                        </div>
+                        ${renderDateItem('Prochain CT', getCTDate(v))}
+                    </div>
                     <div style="margin-top:15px; border-top:1px solid var(--border); padding-top:10px;">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
                             <span style="font-size:0.75rem; color:var(--muted)">Dernière maintenance :</span>
